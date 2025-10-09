@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎧 Konverter MP4 ke MP3</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/727/727245.png" />
+  <style>
+    /* --- Global Style --- */
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    h1 {
+      color: white;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    p.subtitle {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 25px;
+    }
+
+    /* --- Container --- */
+    .converter-box {
+      background: white;
+      padding: 30px 25px;
+      border-radius: 20px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 420px;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    label {
+      background-color: #2575fc;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.3s;
+      display: inline-block;
+    }
+
+    label:hover {
+      background-color: #1d5fd3;
+    }
+
+    .file-name {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    button {
+      background-color: #6a11cb;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background-color: #5710a3;
+    }
+
+    #status {
+      margin-top: 15px;
+      color: #2575fc;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    footer {
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 30px;
+      font-size: 0.8rem;
+    }
+
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #2575fc;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 15px auto;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎵 Konverter MP4 ke MP3</h1>
+  <p class="subtitle">Ubah video jadi audio dengan mudah — langsung dari browser!</p>
+
+  <div class="converter-box">
+    <label for="fileInput">Pilih File MP4</label>
+    <input type="file" id="fileInput" accept="video/mp4" />
+    <p class="file-name" id="fileName">Belum ada file dipilih.</p>
+
+    <button id="convertBtn">Konversi ke MP3</button>
+    <div class="loader" id="loader"></div>
+    <p id="status"></p>
+  </div>
+
+  <footer>© 2025 Konverter MP4 → MP3 | Dibuat oleh Kamu 💜</footer>
+
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.5/dist/ffmpeg.min.js"></script>
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: false });
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const convertBtn = document.getElementById('convertBtn');
+    const status = document.getElementById('status');
+    const loader = document.getElementById('loader');
+    let videoFile;
+
+    fileInput.addEventListener('change', (e) => {
+      videoFile = e.target.files[0];
+      fileName.textContent = videoFile ? "File: " + videoFile.name : "Belum ada file dipilih.";
+    });
+
+    convertBtn.addEventListener('click', async () => {
+      if (!videoFile) {
+        alert("Pilih file MP4 terlebih dahulu!");
+        return;
+      }
+
+      loader.style.display = "block";
+      status.textContent = "Mengonversi... Mohon tunggu sebentar ⏳";
+
+      await ffmpeg.load();
+      ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(videoFile));
+      await ffmpeg.run('-i', 'input.mp4', 'output.mp3');
+      const data = ffmpeg.FS('readFile', 'output.mp3');
+
+      const blob = new Blob([data.buffer], { type: 'audio/mp3' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = videoFile.name.replace(/\.mp4$/, '.mp3');
+      a.click();
+
+      loader.style.display = "none";
+      status.textContent = "✅ Konversi selesai! File MP3 berhasil diunduh.";
+    });
+  </script>
+</body>
+  </html>
