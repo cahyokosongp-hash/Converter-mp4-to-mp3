@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konverter MP4 ke MP3</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fafafa;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 { color: #5b3cc4; }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: inline-block;
+      width: 90%;
+      max-width: 400px;
+    }
+    button {
+      background-color: #5b3cc4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    #status {
+      color: green;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎵 Konverter MP4 ke MP3</h1>
+  <div class="container">
+    <input type="file" id="fileInput" accept="video/mp4"><br>
+    <p id="fileName">Belum ada file dipilih.</p>
+    <button id="convertBtn">Konversi ke MP3</button>
+    <p id="status"></p>
+  </div>
+
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.5/dist/ffmpeg.min.js"></script>
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true });
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const convertBtn = document.getElementById('convertBtn');
+    const status = document.getElementById('status');
+    let videoFile;
+
+    fileInput.addEventListener('change', (e) => {
+      videoFile = e.target.files[0];
+      fileName.textContent = "File terpilih: " + videoFile.name;
+    });
+
+    convertBtn.addEventListener('click', async () => {
+      if (!videoFile) {
+        alert("Pilih file MP4 dulu!");
+        return;
+      }
+
+      status.textContent = "Mengonversi... Mohon tunggu sebentar ⏳";
+
+      await ffmpeg.load();
+      ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(videoFile));
+      await ffmpeg.run('-i', 'input.mp4', 'output.mp3');
+
+      const data = ffmpeg.FS('readFile', 'output.mp3');
+      const url = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/mp3' }));
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = videoFile.name.replace('.mp4', '.mp3');
+      a.click();
+
+      status.textContent = "✅ Konversi selesai! File MP3 telah diunduh.";
+    });
+  </script>
+
+</body>
+</html>
