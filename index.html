@@ -70,6 +70,77 @@
       margin-top: 10px;
       font-size: 0.9rem;
       color: #555;
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎧 Konverter MP4 ke MP3</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/727/727245.png" />
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    h1 {
+      color: white;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    p.subtitle {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 25px;
+    }
+
+    .converter-box {
+      background: white;
+      padding: 30px 25px;
+      border-radius: 20px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 420px;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    label {
+      background-color: #2575fc;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.3s;
+      display: inline-block;
+    }
+
+    label:hover {
+      background-color: #1d5fd3;
+    }
+
+    .file-name {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #555;
+      min-height: 20px;
     }
 
     button {
@@ -94,6 +165,7 @@
       color: #2575fc;
       font-weight: 500;
       font-size: 0.95rem;
+      min-height: 24px;
     }
 
     footer {
@@ -121,7 +193,7 @@
 </head>
 <body>
   <h1>🎵 Konverter MP4 ke MP3</h1>
-  <p class="subtitle">Ubah video jadi audio dengan mudah — langsung dari browser!</p>
+  <p class="subtitle">Ubah video jadi audio langsung dari browser</p>
 
   <div class="converter-box">
     <label for="fileInput">Pilih File MP4</label>
@@ -133,7 +205,7 @@
     <p id="status"></p>
   </div>
 
-  <footer>© 2025 Konverter MP4 → MP3 | Dibuat oleh Kamu 💜</footer>
+  <footer>© 2025 MP4 → MP3 Converter | Dibuat oleh Kamu 💜</footer>
 
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.5/dist/ffmpeg.min.js"></script>
   <script>
@@ -146,9 +218,10 @@
     const loader = document.getElementById('loader');
     let videoFile;
 
+    // tampilkan nama file saat dipilih
     fileInput.addEventListener('change', (e) => {
       videoFile = e.target.files[0];
-      fileName.textContent = videoFile ? "File: " + videoFile.name : "Belum ada file dipilih.";
+      fileName.textContent = videoFile ? "🎬 File terpilih: " + videoFile.name : "Belum ada file dipilih.";
     });
 
     convertBtn.addEventListener('click', async () => {
@@ -158,23 +231,29 @@
       }
 
       loader.style.display = "block";
-      status.textContent = "Mengonversi... Mohon tunggu sebentar ⏳";
+      status.textContent = "🔄 Sedang mengonversi... Mohon tunggu sebentar.";
 
-      await ffmpeg.load();
-      ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(videoFile));
-      await ffmpeg.run('-i', 'input.mp4', 'output.mp3');
-      const data = ffmpeg.FS('readFile', 'output.mp3');
+      try {
+        if (!ffmpeg.isLoaded()) await ffmpeg.load();
+        ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(videoFile));
+        await ffmpeg.run('-i', 'input.mp4', '-q:a', '0', '-map', 'a', 'output.mp3');
 
-      const blob = new Blob([data.buffer], { type: 'audio/mp3' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = videoFile.name.replace(/\.mp4$/, '.mp3');
-      a.click();
+        const data = ffmpeg.FS('readFile', 'output.mp3');
+        const blob = new Blob([data.buffer], { type: 'audio/mp3' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = videoFile.name.replace(/\.mp4$/, '.mp3');
+        a.click();
 
-      loader.style.display = "none";
-      status.textContent = "✅ Konversi selesai! File MP3 berhasil diunduh.";
+        status.textContent = "✅ Konversi selesai! File MP3 berhasil diunduh.";
+      } catch (err) {
+        console.error(err);
+        status.textContent = "❌ Terjadi kesalahan saat konversi.";
+      } finally {
+        loader.style.display = "none";
+      }
     });
   </script>
 </body>
-  </html>
+</html>
