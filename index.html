@@ -1,113 +1,175 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎧 Konverter MP4 ke MP3</title>
-<style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎧 Konverter MP4 ke MP3</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+    }
 
-  .card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    width: 90%;
-    max-width: 420px;
-  }
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      width: 90%;
+      max-width: 400px;
+      backdrop-filter: blur(10px);
+    }
 
-  h1 {
-    font-size: 1.8rem;
-    margin-bottom: 10px;
-  }
+    h1 {
+      margin-bottom: 10px;
+    }
 
-  p {
-    font-size: 0.9rem;
-    color: #ddd;
-  }
+    p {
+      font-size: 14px;
+      color: #e0e0e0;
+    }
 
-  input[type=file] {
-    display: none;
-  }
+    input[type="file"] {
+      display: none;
+    }
 
-  label {
-    background: #fff;
-    color: #2575fc;
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-weight: bold;
-    cursor: pointer;
-    display: inline-block;
-    transition: all 0.3s ease;
-  }
+    label {
+      display: inline-block;
+      background: #fff;
+      color: #2575fc;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
 
-  label:hover {
-    background: #2575fc;
-    color: #fff;
-  }
+    label:hover {
+      background: #2575fc;
+      color: #fff;
+    }
 
-  button {
-    background: #ff4081;
-    border: none;
-    color: #fff;
-    padding: 10px 25px;
-    border-radius: 30px;
-    margin-top: 15px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s ease;
-  }
+    button {
+      display: inline-block;
+      background: #ff4081;
+      color: #fff;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 25px;
+      margin-top: 15px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
 
-  button:hover {
-    background: #e73370;
-  }
+    button:hover {
+      background: #e73370;
+    }
 
-  #fileName {
-    margin-top: 10px;
-    color: #e0e0e0;
-    font-size: 0.9rem;
-  }
+    #fileName {
+      margin-top: 10px;
+      color: #fff;
+      font-size: 14px;
+    }
 
-  #status {
-    margin-top: 15px;
-    font-size: 0.9rem;
-  }
+    #status {
+      margin-top: 15px;
+      font-size: 14px;
+    }
 
-  .progress-bar {
-    width: 100%;
-    height: 10px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    margin-top: 10px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #00c6ff, #0072ff);
-    transition: width 0.3s ease;
-  }
-</style>
+    .loading {
+      display: none;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>🎵 Konverter MP4 ke MP3</h1>
+    <p>Pilih video MP4 dan ubah jadi audio MP3 langsung di browser!</p>
 
-<div class="card">
-  <h1>🎵 Konverter MP4 ke MP3</h1>
-  <p>Ubah video menjadi audio dengan cepat langsung di browser!</p>
+    <input type="file" id="fileInput" accept="video/mp4" />
+    <label for="fileInput">🎬 Pilih File MP4</label>
 
-  <input type="file" id="fileInput" accept="video/mp4">
-  <label for="fileInput">🎬 Pilih File MP4</label>
+    <div id="fileName">Belum ada file dipilih.</div>
+    <button id="convertBtn" disabled>Konversi ke MP3</button>
+    <div id="status"></div>
+    <div class="loading" id="loading">⏳ Mengonversi... mohon tunggu</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: false });
+
+    const fileInput = document.getElementById("fileInput");
+    const fileName = document.getElementById("fileName");
+    const convertBtn = document.getElementById("convertBtn");
+    const status = document.getElementById("status");
+    const loading = document.getElementById("loading");
+
+    let selectedFile;
+
+    fileInput.addEventListener("change", (e) => {
+      selectedFile = e.target.files[0];
+      if (selectedFile) {
+        fileName.textContent = `✅ File terpilih: ${selectedFile.name}`;
+        convertBtn.disabled = false;
+      } else {
+        fileName.textContent = "Belum ada file dipilih.";
+        convertBtn.disabled = true;
+      }
+    });
+
+    convertBtn.addEventListener("click", async () => {
+      if (!selectedFile) {
+        alert("Pilih file MP4 terlebih dahulu!");
+        return;
+      }
+
+      status.textContent = "";
+      loading.style.display = "block";
+      convertBtn.disabled = true;
+
+      try {
+        if (!ffmpeg.isLoaded()) {
+          status.textContent = "🔧 Memuat konverter...";
+          await ffmpeg.load();
+        }
+
+        status.textContent = "🎬 Proses konversi sedang berlangsung...";
+        ffmpeg.FS("writeFile", "input.mp4", await fetchFile(selectedFile));
+        await ffmpeg.run("-i", "input.mp4", "-q:a", "0", "-map", "a", "output.mp3");
+
+        const data = ffmpeg.FS("readFile", "output.mp3");
+        const blob = new Blob([data.buffer], { type: "audio/mp3" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = selectedFile.name.replace(".mp4", ".mp3");
+        a.click();
+
+        status.textContent = "✅ Konversi selesai! File MP3 telah diunduh.";
+      } catch (error) {
+        console.error(error);
+        status.textContent = "❌ Terjadi kesalahan saat konversi.";
+      } finally {
+        loading.style.display = "none";
+        convertBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>  <label for="fileInput">🎬 Pilih File MP4</label>
 
   <p id="fileName">Belum ada file dipilih.</p>
   <button id="convertBtn" disabled>Konversi ke MP3</button>
