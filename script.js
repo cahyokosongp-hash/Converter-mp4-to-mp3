@@ -1,53 +1,46 @@
+// script.js
+
 const videoInput = document.getElementById('videoInput');
 const convertButton = document.getElementById('convertButton');
-const statusDiv = document.getElementById('status');
-const downloadLinkDiv = document.getElementById('downloadLink');
+const statusElement = document.getElementById('status');
+const downloadLink = document.getElementById('downloadLink');
 const downloadAnchor = document.getElementById('downloadAnchor');
 
+let file;
+
 videoInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        convertButton.disabled = false; // Aktifkan tombol setelah file dipilih
-        statusDiv.textContent = 'File siap untuk dikonversi!';
-    }
+    file = event.target.files[0];
+    convertButton.disabled = !file;
 });
 
 convertButton.addEventListener('click', async () => {
-    const file = videoInput.files[0];
-    if (!file) {
-        statusDiv.textContent = 'Pilih file video terlebih dahulu!';
-        return;
-    }
+    if (!file) return;
 
-    statusDiv.textContent = 'Memproses... Ini mungkin memakan waktu beberapa detik.';
-    convertButton.disabled = true;
+    statusElement.innerHTML = "⏳ Sedang memuat FFmpeg...";
+    downloadLink.style.display = 'none';
 
     try {
-        // Pastikan kamu memanggil ffmpeg dari library yang benar
+        // ✅ Gunakan versi resmi FFmpeg WASM
         const { createFFmpeg, fetchFile } = FFmpeg;
-        const ffmpeg = createFFmpeg({
-            log: true,
-            corePath: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.js'
-        });
+        const ffmpeg = createFFmpeg({ log: true });
 
         await ffmpeg.load();
-        ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
 
-        // Ekstrak audio
-        await ffmpeg.run('-i', 'input.mp4', '-q:a', '0', '-map', 'a', 'output.mp3');
+        statusElement.innerHTML = "🎬 Mengonversi video ke MP3...";
+
+        ffmpeg.FS('writeFile', file.name, await fetchFile(file));
+        await ffmpeg.run('-i', file.name, 'output.mp3');
         const data = ffmpeg.FS('readFile', 'output.mp3');
 
-        const blob = new Blob([data.buffer], { type: 'audio/mpeg' });
+        const blob = new Blob([data.buffer], { type: 'audio/mp3' });
         const url = URL.createObjectURL(blob);
 
         downloadAnchor.href = url;
-        downloadLinkDiv.style.display = 'block';
+        downloadLink.style.display = 'block';
+        statusElement.innerHTML = "✅ Konversi selesai!";
 
-        statusDiv.textContent = '✅ Konversi selesai! Klik tombol di bawah untuk unduh MP3.';
-    } catch (error) {
-        statusDiv.textContent = '❌ Terjadi kesalahan: ' + error.message;
-        console.error(error);
-    } finally {
-        convertButton.disabled = false;
+    } catch (err) {
+        console.error(err);
+        statusElement.innerHTML = "❌ Terjadi kesalahan: " + err.message;
     }
 });
