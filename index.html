@@ -11,7 +11,7 @@
     <div class="container mt-5">
         <h1 class="text-center">Convert Video to Audio</h1>
         <p class="text-center">Pilih file video (MP4) dari galeri Anda, lalu konversi ke MP3.</p>
-        
+
         <div class="mb-3">
             <input type="file" id="videoInput" accept="video/*" class="form-control">
         </div>
@@ -27,8 +27,20 @@
         </div>
     </div>
 
-    <!-- Perhatikan: gunakan cdn yang benar untuk ffmpeg.wasm -->
+    <!-- ⚙️ Muat library ffmpeg wasm dari sumber resmi -->
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.4/dist/ffmpeg.min.js"></script>
-    <script src="script.js"></script>
+
+    <!-- ⚙️ Pastikan FFmpeg sudah siap sebelum menjalankan script -->
+    <script>
+        window.addEventListener('load', () => {
+            if (typeof FFmpeg === 'undefined') {
+                alert('❌ Gagal memuat library FFmpeg. Periksa koneksi internet Anda.');
+            } else {
+                const script = document.createElement('script');
+                script.src = 'script.js';
+                document.body.appendChild(script);
+            }
+        });
+    </script>
 </body>
 </html>
